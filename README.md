@@ -4,6 +4,8 @@
 
 This repository is a small Spring Boot learning project that demonstrates how process-related data can be exposed through a simple REST API using Java 21, Spring Web, Spring Data JPA, validation and an H2 database.
 
+Project page: https://datatidehh.github.io/spring-boot-process-api-basics/
+
 It is part of my broader DataTideHH portfolio and supports my learning path toward Data/BI and process-oriented IT roles by connecting backend API basics with structured operational data.
 
 ## Purpose
@@ -37,6 +39,22 @@ Run:
 Then open:
 
 http://localhost:8080/api/process-checks
+
+## GitHub Pages project site
+
+This repository includes a small project landing page under:
+
+    docs/index.md
+
+After GitHub Pages is enabled for the repository, the published site is available at:
+
+    https://datatidehh.github.io/spring-boot-process-api-basics/
+
+Recommended GitHub Pages settings:
+
+    Source: Deploy from a branch
+    Branch: main
+    Folder: /docs
 
 ## Portfolio Context
 
