@@ -1,25 +1,46 @@
+---
+title: Spring Boot Process API Basics
+description: Small Java 21 / Spring Boot REST API portfolio project
+---
+
 # Spring Boot Process API Basics
 
-Small Java 21 / Spring Boot REST API for process-check data.
+**Small Java 21 / Spring Boot REST API project exposing process-check data through a layered backend structure, validation and H2 persistence.**
 
-This project is a deliberately compact backend learning project. It demonstrates how process-related records can be exposed through a REST API using Spring Boot, a layered backend structure, validation and basic H2 persistence.
+[View repository](https://github.com/DataTideHH/spring-boot-process-api-basics) · [Read the full README](https://github.com/DataTideHH/spring-boot-process-api-basics/blob/main/README.md) · [DataTideHH portfolio](https://datatidehh.de/)
+
+---
+
+## Project purpose
+
+This project is a deliberately compact backend learning project.
+
+It demonstrates how process-related records can be represented, validated, persisted and exposed through a small REST API using Spring Boot.
+
+The goal is not to present a production service or an enterprise backend system. The goal is to document a clean first step from Java basics toward a small enterprise-style REST API that supports structured operational data.
+
+---
 
 ## Portfolio context
 
-The project supports a Data/BI and process-analysis learning path by connecting backend API fundamentals with structured operational data.
+The project supports a Data/BI and process-analysis learning path by connecting backend API fundamentals with structured process data.
 
-It is not intended to be a production service or an enterprise backend system. The goal is to document a clean first step from Java basics toward a small enterprise-style REST API.
+For Data/BI and process analysis work, APIs are an important interface between operational systems and downstream data workflows. This project is useful as a supporting IT foundation because it shows how process-related records can move through a simple backend structure.
+
+---
 
 ## What the project demonstrates
 
 - Java 21 project setup
 - Spring Boot REST API basics
-- Controller, service and repository separation
+- controller, service and repository separation
 - Spring Data JPA repository usage
 - request validation
 - H2 in-memory persistence
 - CRUD endpoints for process-check data
 - local Maven build and run workflow
+
+---
 
 ## API scope
 
@@ -33,6 +54,8 @@ PUT    /api/process-checks/{id}
 DELETE /api/process-checks/{id}
 ```
 
+---
+
 ## Example process-check record
 
 ```json
@@ -45,6 +68,8 @@ DELETE /api/process-checks/{id}
   "slaMinutes": 60
 }
 ```
+
+---
 
 ## Local usage
 
@@ -66,16 +91,12 @@ Build and test locally:
 ./mvnw clean package
 ```
 
+---
+
 ## Data and limitations
 
 The project uses an H2 in-memory database. Data is reset when the application stops.
 
 The sample data is synthetic and does not contain personal, customer or production data.
 
-## Repository
-
-GitHub repository:
-
-```text
-https://github.com/DataTideHH/spring-boot-process-api-basics
-```
+This is a learning project and does not include authentication, production database configuration, cloud deployment or enterprise-scale error handling.
