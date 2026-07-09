@@ -93,10 +93,17 @@ Build and test locally:
 
 ---
 
+## Related DataTideHH project pages
+
+- [Music Production Data Lab](https://datatidehh.github.io/music-production-data-lab/) — public-safe data modeling, SQL/Python workflow and Power BI reporting layer
+- [Network Operations Data Lab](https://datatidehh.github.io/network-operations-data-lab/) — public-safe operational IT data, Python, SQL and data-quality workflow
+
+---
+
 ## Data and limitations
 
 The project uses an H2 in-memory database. Data is reset when the application stops.
 
 The sample data is synthetic and does not contain personal, customer or production data.
 
-This is a learning project and does not include authentication, production database configuration, cloud deployment or enterprise-scale error handling.
+This is a learning project with a deliberately limited scope.
