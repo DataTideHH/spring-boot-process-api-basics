@@ -1,0 +1,21 @@
+theme: jekyll-theme-cayman
+title: Spring Boot Process API Basics
+description: Small Java 21 / Spring Boot REST API portfolio project
+show_downloads: false
+repository: DataTideHH/spring-boot-process-api-basics
+url: https://datatidehh.github.io
+baseurl: /spring-boot-process-api-basics
+lang: en
+
+plugins:
+  - jekyll-relative-links
+
+relative_links:
+  enabled: true
+  collections: true
+
+defaults:
+  - scope:
+      path: ""
+    values:
+      layout: default
