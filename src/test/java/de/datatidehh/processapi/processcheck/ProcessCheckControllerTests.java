@@ -70,7 +70,7 @@ class ProcessCheckControllerTests {
     }
 
     @Test
-    void findAllWithStatusWithoutMatchesReturnsEmptyArray() throws Exception {
+    void findAllWithCriticalStatusReturnsEmptyArrayWhenNoRecordsMatch() throws Exception {
         mockMvc.perform(get("/api/process-checks").param("status", "CRITICAL"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$", hasSize(0)));
