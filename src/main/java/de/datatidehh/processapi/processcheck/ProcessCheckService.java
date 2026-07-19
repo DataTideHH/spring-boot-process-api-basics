@@ -13,17 +13,18 @@ public class ProcessCheckService {
         this.repository = repository;
     }
 
-    public List<ProcessCheckResponse> findAll() {
-        return repository.findAll()
-                .stream()
+    public List<ProcessCheckResponse> findAll(ProcessStatus status) {
+        List<ProcessCheck> processChecks = status == null
+                ? repository.findAll()
+                : repository.findAllByStatus(status);
+
+        return processChecks.stream()
                 .map(ProcessCheckResponse::fromEntity)
                 .toList();
     }
 
     public ProcessCheckResponse findById(Long id) {
-        return repository.findById(id)
-                .map(ProcessCheckResponse::fromEntity)
-                .orElseThrow(() -> new IllegalArgumentException("Process check not found: " + id));
+        return ProcessCheckResponse.fromEntity(findEntityById(id));
     }
 
     public ProcessCheckResponse create(ProcessCheckRequest request) {
@@ -39,8 +40,7 @@ public class ProcessCheckService {
     }
 
     public ProcessCheckResponse update(Long id, ProcessCheckRequest request) {
-        ProcessCheck processCheck = repository.findById(id)
-                .orElseThrow(() -> new IllegalArgumentException("Process check not found: " + id));
+        ProcessCheck processCheck = findEntityById(id);
 
         processCheck.update(
                 request.processName(),
@@ -55,5 +55,11 @@ public class ProcessCheckService {
 
     public void delete(Long id) {
         repository.deleteById(id);
+    }
+
+    private ProcessCheck findEntityById(Long id) {
+        return repository.findById(id)
+                .orElseThrow(() ->
+                        new IllegalArgumentException("Process check not found: " + id));
     }
 }

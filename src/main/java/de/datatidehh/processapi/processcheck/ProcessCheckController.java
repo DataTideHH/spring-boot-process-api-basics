@@ -16,8 +16,8 @@ public class ProcessCheckController {
     }
 
     @GetMapping
-    public List<ProcessCheckResponse> findAll() {
-        return service.findAll();
+    public List<ProcessCheckResponse> findAll(@RequestParam(required = false) ProcessStatus status) {
+        return service.findAll(status);
     }
 
     @GetMapping("/{id}")
