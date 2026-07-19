@@ -13,8 +13,12 @@ public class ProcessCheckService {
         this.repository = repository;
     }
 
-    public List<ProcessCheckResponse> findAll() {
-        return repository.findAll()
+    public List<ProcessCheckResponse> findAll(ProcessStatus status) {
+        List<ProcessCheck> processChecks = status == null
+                ? repository.findAll()
+                : repository.findAllByStatus(status);
+
+        return processChecks
                 .stream()
                 .map(ProcessCheckResponse::fromEntity)
                 .toList();
