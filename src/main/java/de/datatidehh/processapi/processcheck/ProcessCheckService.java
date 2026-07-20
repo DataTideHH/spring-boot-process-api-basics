@@ -1,10 +1,12 @@
 package de.datatidehh.processapi.processcheck;
 
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional(readOnly = true)
 public class ProcessCheckService {
 
     private final ProcessCheckRepository repository;
@@ -27,6 +29,7 @@ public class ProcessCheckService {
         return ProcessCheckResponse.fromEntity(findEntityById(id));
     }
 
+    @Transactional
     public ProcessCheckResponse create(ProcessCheckRequest request) {
         ProcessCheck processCheck = new ProcessCheck(
                 request.processName(),
@@ -39,6 +42,7 @@ public class ProcessCheckService {
         return ProcessCheckResponse.fromEntity(repository.save(processCheck));
     }
 
+    @Transactional
     public ProcessCheckResponse update(Long id, ProcessCheckRequest request) {
         ProcessCheck processCheck = findEntityById(id);
 
@@ -53,13 +57,14 @@ public class ProcessCheckService {
         return ProcessCheckResponse.fromEntity(repository.save(processCheck));
     }
 
+    @Transactional
     public void delete(Long id) {
-        repository.deleteById(id);
+        ProcessCheck processCheck = findEntityById(id);
+        repository.delete(processCheck);
     }
 
     private ProcessCheck findEntityById(Long id) {
         return repository.findById(id)
-                .orElseThrow(() ->
-                        new IllegalArgumentException("Process check not found: " + id));
+                .orElseThrow(() -> new ProcessCheckNotFoundException(id));
     }
 }
