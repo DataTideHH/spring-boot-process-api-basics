@@ -1,8 +1,10 @@
 # Spring Boot Process API Basics
 
-**Java 21 · Spring Boot · REST API · Spring Data JPA · H2 · Validation · Maven**
+[![CI](https://github.com/DataTideHH/spring-boot-process-api-basics/actions/workflows/ci.yml/badge.svg)](https://github.com/DataTideHH/spring-boot-process-api-basics/actions/workflows/ci.yml)
 
-Small Java 21 / Spring Boot learning project that exposes process-check data through a simple REST API.
+**Java 21 · Spring Boot 4.1 · REST API · Spring Data JPA · H2 · Validation · Maven · GitHub Actions**
+
+Small Java 21 / Spring Boot learning project that exposes validated process-check data through a layered REST API.
 
 Project page: https://datatidehh.github.io/spring-boot-process-api-basics/
 
@@ -19,12 +21,16 @@ It demonstrates:
 - REST endpoints for a small process-related resource
 - layered backend structure with controller, service and repository
 - request validation
+- status-based filtering
+- explicit HTTP success and error behavior
 - basic persistence with Spring Data JPA
-- an H2 in-memory database for local development
-- a local Maven build and test workflow
+- an H2 in-memory database for local development and tests
+- automated API integration tests with MockMvc
+- a reproducible Maven Wrapper workflow
+- GitHub Actions CI on Java 21
 - synthetic sample data for process-oriented API testing
 
-The goal is not to present a large enterprise backend. The goal is to document a clean first step from Java basics toward a small Spring Boot REST API that handles structured process data.
+The goal is not to present a large enterprise backend. The goal is to document a clean first step from Java basics toward a small, tested Spring Boot REST API that handles structured process data.
 
 ---
 
@@ -43,12 +49,15 @@ It complements my main Data/BI portfolio projects around SQL, Python, Power BI, 
 | Layer | Tool / Concept | Purpose |
 |---|---|---|
 | Language | Java 21 | Main implementation language |
-| Framework | Spring Boot | REST API application framework |
-| API layer | Spring Web | HTTP endpoints and JSON responses |
+| Framework | Spring Boot 4.1 | REST API application framework |
+| API layer | Spring Web MVC | HTTP endpoints and JSON responses |
 | Persistence | Spring Data JPA | Repository abstraction and entity persistence |
-| Database | H2 | In-memory local development database |
-| Validation | Jakarta Validation | Request validation for incoming data |
-| Build tool | Maven Wrapper | Reproducible local build workflow |
+| Database | H2 | In-memory local development and test database |
+| Validation | Jakarta Validation | Validation for incoming request data |
+| Error format | Spring `ProblemDetail` | Consistent `application/problem+json` responses |
+| Tests | JUnit 5, Spring Boot Test, MockMvc | API integration and persistence verification |
+| Build tool | Maven Wrapper | Reproducible builds on Windows, macOS and Linux |
+| CI | GitHub Actions | Automated Java 21 Maven verification |
 
 ---
 
@@ -68,17 +77,28 @@ Current package focus:
 src/main/java/de/datatidehh/processapi/processcheck/
 ```
 
+The API uses request and response records instead of exposing the JPA entity directly.
+
 ---
 
-## API Endpoints
+## API Contract
 
-| Method | Endpoint | Purpose |
-|---|---|---|
-| `GET` | `/api/process-checks` | Return all process-check records |
-| `GET` | `/api/process-checks/{id}` | Return one process-check record by ID |
-| `POST` | `/api/process-checks` | Create a new process-check record |
-| `PUT` | `/api/process-checks/{id}` | Update an existing process-check record |
-| `DELETE` | `/api/process-checks/{id}` | Delete a process-check record |
+| Method | Endpoint | Success | Purpose |
+|---|---|---:|---|
+| `GET` | `/api/process-checks` | `200 OK` | Return all process-check records |
+| `GET` | `/api/process-checks?status=OK` | `200 OK` | Filter records by `OK`, `WARNING` or `CRITICAL` |
+| `GET` | `/api/process-checks/{id}` | `200 OK` | Return one process-check record by ID |
+| `POST` | `/api/process-checks` | `201 Created` | Create a record and return its URI in `Location` |
+| `PUT` | `/api/process-checks/{id}` | `200 OK` | Replace the editable values of an existing record |
+| `DELETE` | `/api/process-checks/{id}` | `204 No Content` | Delete an existing record |
+
+Typical client errors:
+
+| Situation | Result |
+|---|---:|
+| Invalid request body | `400 Bad Request` |
+| Invalid status query value | `400 Bad Request` |
+| Unknown record ID | `404 Not Found` |
 
 ---
 
@@ -95,14 +115,46 @@ src/main/java/de/datatidehh/processapi/processcheck/
 }
 ```
 
+Request validation requires:
+
+- a non-blank `processName`
+- a non-blank `owner`
+- a valid status: `OK`, `WARNING` or `CRITICAL`
+- a non-null ISO local date-time value
+- `slaMinutes` of at least `1`
+
+---
+
+## Error Response Example
+
+Requests for unknown IDs return a standard Spring `ProblemDetail` response with media type `application/problem+json`:
+
+```json
+{
+  "type": "about:blank",
+  "title": "Process check not found",
+  "status": 404,
+  "detail": "Process check not found: 999999",
+  "instance": "/api/process-checks/999999"
+}
+```
+
 ---
 
 ## Run Locally
+
+### macOS or Linux
 
 From the repository root:
 
 ```bash
 ./mvnw spring-boot:run
+```
+
+### Windows PowerShell
+
+```powershell
+.\mvnw.cmd spring-boot:run
 ```
 
 Then open:
@@ -121,19 +173,53 @@ At first startup, the API returns an empty JSON array because the H2 database is
 
 ## Build and Test
 
-Run:
+### macOS or Linux
 
 ```bash
-./mvnw clean package
+./mvnw clean verify
 ```
 
-The project has been built and smoke-tested locally with Java 21 and the Maven Wrapper.
+### Windows PowerShell
+
+```powershell
+.\mvnw.cmd clean verify
+```
+
+The automated suite verifies:
+
+- application context startup
+- unfiltered and status-filtered list requests
+- empty filter results
+- invalid status handling
+- lookup by ID
+- `404` Problem Detail responses
+- successful creation with `201 Created` and `Location`
+- request validation failures
+- update behavior and persisted values
+- successful deletion with `204 No Content`
+- update and delete behavior for unknown IDs
+
+---
+
+## Continuous Integration
+
+The workflow under `.github/workflows/ci.yml` runs for pull requests and pushes to `main`.
+
+It uses:
+
+- an Ubuntu GitHub-hosted runner
+- Eclipse Temurin Java 21
+- Maven dependency caching
+- the repository's Maven Wrapper
+- `clean verify` as the build and test gate
+
+The workflow has read-only repository permissions and cancels superseded runs for the same branch or pull request.
 
 ---
 
 ## Manual API Test Flow
 
-The API was manually tested with curl for the full CRUD flow:
+The full CRUD flow can also be exercised manually with curl, an API client or an IDE HTTP client:
 
 ```text
 POST   /api/process-checks       create a process-check record
@@ -148,12 +234,10 @@ Example test data:
 ```text
 processName: Daily sales import
 owner: Data Operations
-status: OK / WARNING
+status: OK / WARNING / CRITICAL
 lastCheckedAt: 2026-07-10T00:25:00
 slaMinutes: 60
 ```
-
-After deletion, the list endpoint returns an empty JSON array again.
 
 ---
 
@@ -168,11 +252,32 @@ That means:
 - inserted records are lost when the application stops
 - this is suitable for a small learning project, not for production persistence
 
-The H2 console is available locally while the application is running:
+The H2 console is available while the application is running:
 
 ```text
 http://localhost:8080/h2-console
 ```
+
+Connection values:
+
+```text
+JDBC URL: jdbc:h2:mem:processdb
+User: sa
+Password: <empty>
+```
+
+---
+
+## Learning References
+
+The related official documentation is curated in [`open-learning-resources`](https://github.com/DataTideHH/open-learning-resources):
+
+- [Spring Boot Documentation](https://github.com/DataTideHH/open-learning-resources/tree/main/resources/java/spring-boot-documentation)
+- [Spring Data JPA Documentation](https://github.com/DataTideHH/open-learning-resources/tree/main/resources/java/spring-data-jpa-documentation)
+- [Apache Maven and Maven Wrapper Documentation](https://github.com/DataTideHH/open-learning-resources/tree/main/resources/java/apache-maven-and-wrapper-documentation)
+- [GitHub Actions Documentation](https://github.com/DataTideHH/open-learning-resources/tree/main/resources/git/github-actions-documentation)
+
+This keeps the project implementation connected to official primary documentation without mirroring dynamic framework documentation locally.
 
 ---
 
@@ -206,14 +311,18 @@ This repository demonstrates a small but realistic backend foundation:
 
 - Java 21 project workflow
 - Spring Boot application structure
-- REST endpoint design
+- REST endpoint and HTTP-status design
 - JSON request and response handling
-- CRUD operations
+- CRUD operations and status filtering
 - layered backend organization
 - request validation
-- basic persistence abstraction with Spring Data JPA
-- local development with H2
-- Maven build and test workflow
+- standard Problem Detail error responses
+- explicit transaction boundaries
+- persistence abstraction with Spring Data JPA
+- local development and testing with H2
+- automated integration testing
+- reproducible Maven builds
+- GitHub Actions CI
 - public portfolio documentation for a focused learning project
 
 ---
@@ -222,9 +331,9 @@ This repository demonstrates a small but realistic backend foundation:
 
 This is a learning project.
 
-It does not include production database configuration, Docker deployment, a frontend UI, cloud deployment, monitoring infrastructure or enterprise-scale error handling.
+It does not include production database configuration, Docker deployment, authentication and authorization, a frontend UI, cloud deployment, monitoring infrastructure, pagination or enterprise-scale operational error handling.
 
-These omissions are intentional. The current scope is limited to a clean, understandable Spring Boot REST API baseline.
+These omissions are intentional. The current scope is limited to a clean, understandable and tested Spring Boot REST API baseline.
 
 ---
 

@@ -6,25 +6,33 @@
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
 		<version>4.1.0</version>
-		<relativePath/> <!-- lookup parent from repository -->
+		<relativePath/>
 	</parent>
 	<groupId>de.datatidehh</groupId>
 	<artifactId>spring-boot-process-api-basics</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
 	<name>spring-boot-process-api-basics</name>
-	<description/>
-	<url/>
+	<description>Small Java 21 and Spring Boot REST API for validated process-check records.</description>
+	<url>https://github.com/DataTideHH/spring-boot-process-api-basics</url>
 	<licenses>
-		<license/>
+		<license>
+			<name>MIT License</name>
+			<url>https://opensource.org/license/mit</url>
+			<distribution>repo</distribution>
+		</license>
 	</licenses>
 	<developers>
-		<developer/>
+		<developer>
+			<name>Tobias Wietelmann</name>
+			<organization>DataTideHH</organization>
+			<organizationUrl>https://datatidehh.de/</organizationUrl>
+		</developer>
 	</developers>
 	<scm>
-		<connection/>
-		<developerConnection/>
-		<tag/>
-		<url/>
+		<connection>scm:git:https://github.com/DataTideHH/spring-boot-process-api-basics.git</connection>
+		<developerConnection>scm:git:ssh://git@github.com/DataTideHH/spring-boot-process-api-basics.git</developerConnection>
+		<tag>HEAD</tag>
+		<url>https://github.com/DataTideHH/spring-boot-process-api-basics</url>
 	</scm>
 	<properties>
 		<java.version>21</java.version>
