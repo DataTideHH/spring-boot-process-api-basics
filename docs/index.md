@@ -27,6 +27,8 @@ The project supports a Data/BI and process-analysis learning path by connecting 
 
 For Data/BI and process analysis work, APIs are an important interface between operational systems and downstream data workflows. This project is useful as a supporting IT foundation because it shows how process-related records can move through a simple backend structure.
 
+It follows the [IPv4 Subnet Calculator Multilang](https://datatidehh.github.io/ipv4-subnet-calculator-multilang/) in the Java learning progression: the subnet project demonstrates a compact, tested command-line implementation and shared cross-language contract, while this repository adds framework structure, HTTP endpoints, validation and persistence.
+
 ---
 
 ## What the project demonstrates
@@ -95,6 +97,8 @@ Build and test locally:
 
 ## Related DataTideHH project pages
 
+- [IPv4 Subnet Calculator Multilang](https://datatidehh.github.io/ipv4-subnet-calculator-multilang/) — one IPv4/CIDR specification implemented and tested in Java, C++ and Python
+- [Cisco Switching Lab](https://datatidehh.github.io/cisco-switching-lab/) — physical networking and CCNA-oriented switching context
 - [Music Production Data Lab](https://datatidehh.github.io/music-production-data-lab/) — public-safe data modeling, SQL/Python workflow and Power BI reporting layer
 - [Network Operations Data Lab](https://datatidehh.github.io/network-operations-data-lab/) — public-safe operational IT data, Python, SQL and data-quality workflow
 
