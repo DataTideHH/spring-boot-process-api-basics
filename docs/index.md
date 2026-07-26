@@ -5,9 +5,9 @@ description: Small Java 21 / Spring Boot REST API portfolio project
 
 # Spring Boot Process API Basics
 
-**Small Java 21 / Spring Boot REST API project exposing process-check data through a layered backend structure, validation and H2 persistence.**
+**Small Java 21 / Spring Boot REST API project exposing validated process-check data through a layered backend structure, automated tests and H2 persistence.**
 
-[View repository](https://github.com/DataTideHH/spring-boot-process-api-basics) · [Read the full README](https://github.com/DataTideHH/spring-boot-process-api-basics/blob/main/README.md) · [DataTideHH portfolio](https://datatidehh.de/)
+[View repository](https://github.com/DataTideHH/spring-boot-process-api-basics) · [Read the full README](https://github.com/DataTideHH/spring-boot-process-api-basics/blob/main/README.md) · [View CI](https://github.com/DataTideHH/spring-boot-process-api-basics/actions/workflows/ci.yml) · [DataTideHH portfolio](https://datatidehh.de/)
 
 ---
 
@@ -17,7 +17,7 @@ This project is a deliberately compact backend learning project.
 
 It demonstrates how process-related records can be represented, validated, persisted and exposed through a small REST API using Spring Boot.
 
-The goal is not to present a production service or an enterprise backend system. The goal is to document a clean first step from Java basics toward a small enterprise-style REST API that supports structured operational data.
+The goal is not to present a production service or an enterprise backend system. The goal is to document a clean first step from Java basics toward a small layered REST API with explicit HTTP behavior, persistence and automated verification.
 
 ---
 
@@ -25,36 +25,41 @@ The goal is not to present a production service or an enterprise backend system.
 
 The project supports a Data/BI and process-analysis learning path by connecting backend API fundamentals with structured process data.
 
-For Data/BI and process analysis work, APIs are an important interface between operational systems and downstream data workflows. This project is useful as a supporting IT foundation because it shows how process-related records can move through a simple backend structure.
+For Data/BI and process analysis work, APIs are an important interface between operational systems and downstream data workflows. This project is useful as a supporting IT foundation because it shows how process-related records move through a simple backend structure.
 
-It follows the [IPv4 Subnet Calculator Multilang](https://datatidehh.github.io/ipv4-subnet-calculator-multilang/) in the Java learning progression: the subnet project demonstrates a compact, tested command-line implementation and shared cross-language contract, while this repository adds framework structure, HTTP endpoints, validation and persistence.
+It follows the [IPv4 Subnet Calculator Multilang](https://datatidehh.github.io/ipv4-subnet-calculator-multilang/) in the Java learning progression: the subnet project demonstrates a compact, tested command-line implementation and shared cross-language contract, while this repository adds framework structure, HTTP endpoints, validation, persistence and CI.
 
 ---
 
 ## What the project demonstrates
 
-- Java 21 project setup
-- Spring Boot REST API basics
+- Java 21 and Spring Boot 4.1
 - controller, service and repository separation
 - Spring Data JPA repository usage
-- request validation
+- request and response records
+- Jakarta Validation
 - H2 in-memory persistence
 - CRUD endpoints for process-check data
-- local Maven build and run workflow
+- optional status filtering
+- standard `ProblemDetail` error responses
+- integration tests with Spring Boot Test and MockMvc
+- reproducible Maven Wrapper builds
+- GitHub Actions verification on Java 21
 
 ---
 
-## API scope
+## API contract
 
-The API exposes a small process-check resource.
+| Method | Endpoint | Result | Purpose |
+|---|---|---:|---|
+| `GET` | `/api/process-checks` | `200` | List all records |
+| `GET` | `/api/process-checks?status=OK` | `200` | Filter by `OK`, `WARNING` or `CRITICAL` |
+| `GET` | `/api/process-checks/{id}` | `200` | Read one record |
+| `POST` | `/api/process-checks` | `201` | Create a record and return `Location` |
+| `PUT` | `/api/process-checks/{id}` | `200` | Update a record |
+| `DELETE` | `/api/process-checks/{id}` | `204` | Delete a record |
 
-```text
-GET    /api/process-checks
-GET    /api/process-checks/{id}
-POST   /api/process-checks
-PUT    /api/process-checks/{id}
-DELETE /api/process-checks/{id}
-```
+Invalid input returns `400 Bad Request`. Unknown record IDs return `404 Not Found` as `application/problem+json`.
 
 ---
 
@@ -75,23 +80,44 @@ DELETE /api/process-checks/{id}
 
 ## Local usage
 
-Run the application from the repository root:
+### macOS or Linux
 
 ```bash
 ./mvnw spring-boot:run
+./mvnw clean verify
 ```
 
-Then open:
+### Windows PowerShell
+
+```powershell
+.\mvnw.cmd spring-boot:run
+.\mvnw.cmd clean verify
+```
+
+The API is available at:
 
 ```text
 http://localhost:8080/api/process-checks
 ```
 
-Build and test locally:
+---
 
-```bash
-./mvnw clean package
-```
+## Verification
+
+The integration suite covers list and filter behavior, lookup by ID, creation, validation failures, updates, deletion, persistence effects and `404` Problem Detail responses.
+
+The GitHub Actions workflow runs `clean verify` with Eclipse Temurin Java 21 for pull requests and pushes to `main`.
+
+---
+
+## Official learning references
+
+The matching primary documentation is curated in [Open Learning Resources](https://github.com/DataTideHH/open-learning-resources):
+
+- [Spring Boot Documentation](https://github.com/DataTideHH/open-learning-resources/tree/main/resources/java/spring-boot-documentation)
+- [Spring Data JPA Documentation](https://github.com/DataTideHH/open-learning-resources/tree/main/resources/java/spring-data-jpa-documentation)
+- [Apache Maven and Maven Wrapper Documentation](https://github.com/DataTideHH/open-learning-resources/tree/main/resources/java/apache-maven-and-wrapper-documentation)
+- [GitHub Actions Documentation](https://github.com/DataTideHH/open-learning-resources/tree/main/resources/git/github-actions-documentation)
 
 ---
 
@@ -110,4 +136,4 @@ The project uses an H2 in-memory database. Data is reset when the application st
 
 The sample data is synthetic and does not contain personal, customer or production data.
 
-This is a learning project with a deliberately limited scope.
+This is a learning project with a deliberately limited scope. It does not claim production deployment, authentication, cloud operation or enterprise-scale infrastructure.
