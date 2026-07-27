@@ -1,6 +1,7 @@
 # Spring Boot Process API Basics
 
 [![CI](https://github.com/DataTideHH/spring-boot-process-api-basics/actions/workflows/ci.yml/badge.svg)](https://github.com/DataTideHH/spring-boot-process-api-basics/actions/workflows/ci.yml)
+[![GitHub Pages](https://github.com/DataTideHH/spring-boot-process-api-basics/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/DataTideHH/spring-boot-process-api-basics/actions/workflows/pages/pages-build-deployment)
 
 **Java 21 · Spring Boot 4.1 · REST API · Spring Data JPA · H2 · Validation · Maven · GitHub Actions**
 
