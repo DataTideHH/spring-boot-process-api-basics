@@ -1,13 +1,17 @@
 package de.datatidehh.processapi.processcheck;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
-import java.util.List;
 
 @Service
 @Transactional(readOnly = true)
 public class ProcessCheckService {
+
+    private static final Logger log = LoggerFactory.getLogger(ProcessCheckService.class);
 
     private final ProcessCheckRepository repository;
 
@@ -15,14 +19,15 @@ public class ProcessCheckService {
         this.repository = repository;
     }
 
-    public List<ProcessCheckResponse> findAll(ProcessStatus status) {
-        List<ProcessCheck> processChecks = status == null
-                ? repository.findAll()
-                : repository.findAllByStatus(status);
+    public Page<ProcessCheckResponse> findAll(
+            ProcessStatus status,
+            Pageable pageable
+    ) {
+        Page<ProcessCheck> processChecks = status == null
+                ? repository.findAll(pageable)
+                : repository.findAllByStatus(status, pageable);
 
-        return processChecks.stream()
-                .map(ProcessCheckResponse::fromEntity)
-                .toList();
+        return processChecks.map(ProcessCheckResponse::fromEntity);
     }
 
     public ProcessCheckResponse findById(Long id) {
@@ -39,7 +44,15 @@ public class ProcessCheckService {
                 request.slaMinutes()
         );
 
-        return ProcessCheckResponse.fromEntity(repository.save(processCheck));
+        ProcessCheck savedProcessCheck = repository.save(processCheck);
+
+        log.info(
+                "Created process check id={} status={}",
+                savedProcessCheck.getId(),
+                savedProcessCheck.getStatus()
+        );
+
+        return ProcessCheckResponse.fromEntity(savedProcessCheck);
     }
 
     @Transactional
@@ -54,13 +67,21 @@ public class ProcessCheckService {
                 request.slaMinutes()
         );
 
-        return ProcessCheckResponse.fromEntity(repository.save(processCheck));
+        log.info(
+                "Updated process check id={} status={}",
+                processCheck.getId(),
+                processCheck.getStatus()
+        );
+
+        return ProcessCheckResponse.fromEntity(processCheck);
     }
 
     @Transactional
     public void delete(Long id) {
         ProcessCheck processCheck = findEntityById(id);
         repository.delete(processCheck);
+
+        log.info("Deleted process check id={}", id);
     }
 
     private ProcessCheck findEntityById(Long id) {

@@ -21,10 +21,11 @@ It demonstrates:
 
 - REST endpoints for a small process-related resource
 - layered backend structure with controller, service and repository
-- request validation
-- status-based filtering
+- request validation and matching database constraints
+- status-based filtering and pagination
 - explicit HTTP success and error behavior
 - basic persistence with Spring Data JPA
+- restrained parameterized logging for write operations
 - an H2 in-memory database for local development and tests
 - automated API integration tests with MockMvc
 - a reproducible Maven Wrapper workflow
@@ -52,10 +53,12 @@ It complements my main Data/BI portfolio projects around SQL, Python, Power BI, 
 | Language | Java 21 | Main implementation language |
 | Framework | Spring Boot 4.1 | REST API application framework |
 | API layer | Spring Web MVC | HTTP endpoints and JSON responses |
+| Pagination | Spring Data `Pageable` and `PagedModel` | Bounded list responses with stable page metadata |
 | Persistence | Spring Data JPA | Repository abstraction and entity persistence |
 | Database | H2 | In-memory local development and test database |
 | Validation | Jakarta Validation | Validation for incoming request data |
 | Error format | Spring `ProblemDetail` | Consistent `application/problem+json` responses |
+| Logging | SLF4J | Structured create, update and delete messages |
 | Tests | JUnit 5, Spring Boot Test, MockMvc | API integration and persistence verification |
 | Build tool | Maven Wrapper | Reproducible builds on Windows, macOS and Linux |
 | CI | GitHub Actions | Automated Java 21 Maven verification |
@@ -86,12 +89,20 @@ The API uses request and response records instead of exposing the JPA entity dir
 
 | Method | Endpoint | Success | Purpose |
 |---|---|---:|---|
-| `GET` | `/api/process-checks` | `200 OK` | Return all process-check records |
-| `GET` | `/api/process-checks?status=OK` | `200 OK` | Filter records by `OK`, `WARNING` or `CRITICAL` |
+| `GET` | `/api/process-checks?page=0&size=20` | `200 OK` | Return one page of process-check records |
+| `GET` | `/api/process-checks?status=OK&page=0&size=20` | `200 OK` | Filter and page records by status |
 | `GET` | `/api/process-checks/{id}` | `200 OK` | Return one process-check record by ID |
 | `POST` | `/api/process-checks` | `201 Created` | Create a record and return its URI in `Location` |
 | `PUT` | `/api/process-checks/{id}` | `200 OK` | Replace the editable values of an existing record |
 | `DELETE` | `/api/process-checks/{id}` | `204 No Content` | Delete an existing record |
+
+List endpoints accept the standard Spring Data parameters:
+
+- `page`: zero-based page number, default `0`
+- `size`: requested page size, default `20`, capped at `100`
+- `sort`: field and direction, for example `sort=processName,asc`
+
+The default list order is `lastCheckedAt,desc`.
 
 Typical client errors:
 
@@ -103,26 +114,38 @@ Typical client errors:
 
 ---
 
-## Example Process-Check Record
+## Example Paged Response
 
 ```json
 {
-  "id": 1,
-  "processName": "Daily sales import",
-  "owner": "Data Operations",
-  "status": "OK",
-  "lastCheckedAt": "2026-07-10T00:25:00",
-  "slaMinutes": 60
+  "content": [
+    {
+      "id": 1,
+      "processName": "Daily sales import",
+      "owner": "Data Operations",
+      "status": "OK",
+      "lastCheckedAt": "2026-07-10T00:25:00",
+      "slaMinutes": 60
+    }
+  ],
+  "page": {
+    "size": 20,
+    "totalElements": 1,
+    "totalPages": 1,
+    "number": 0
+  }
 }
 ```
 
 Request validation requires:
 
-- a non-blank `processName`
-- a non-blank `owner`
+- a non-blank `processName` with at most 120 characters
+- a non-blank `owner` with at most 120 characters
 - a valid status: `OK`, `WARNING` or `CRITICAL`
 - a non-null ISO local date-time value
 - `slaMinutes` of at least `1`
+
+The entity mirrors the non-null and maximum-length constraints so the API and database schema enforce the same basic rules.
 
 ---
 
@@ -164,10 +187,18 @@ Then open:
 http://localhost:8080/api/process-checks
 ```
 
-At first startup, the API returns an empty JSON array because the H2 database is empty:
+At first startup, the H2 database is empty, so the list endpoint returns an empty page:
 
 ```json
-[]
+{
+  "content": [],
+  "page": {
+    "size": 20,
+    "totalElements": 0,
+    "totalPages": 0,
+    "number": 0
+  }
+}
 ```
 
 ---
@@ -189,13 +220,14 @@ At first startup, the API returns an empty JSON array because the H2 database is
 The automated suite verifies:
 
 - application context startup
+- default and requested pagination
 - unfiltered and status-filtered list requests
 - empty filter results
 - invalid status handling
 - lookup by ID
 - `404` Problem Detail responses
 - successful creation with `201 Created` and `Location`
-- request validation failures
+- blank, invalid and oversized request values
 - update behavior and persisted values
 - successful deletion with `204 No Content`
 - update and delete behavior for unknown IDs
@@ -223,11 +255,12 @@ The workflow has read-only repository permissions and cancels superseded runs fo
 The full CRUD flow can also be exercised manually with curl, an API client or an IDE HTTP client:
 
 ```text
-POST   /api/process-checks       create a process-check record
-GET    /api/process-checks       list all process-check records
-GET    /api/process-checks/1     read one process-check record
-PUT    /api/process-checks/1     update one process-check record
-DELETE /api/process-checks/1     delete one process-check record
+POST   /api/process-checks
+GET    /api/process-checks?page=0&size=20
+GET    /api/process-checks?status=OK&page=0&size=20
+GET    /api/process-checks/1
+PUT    /api/process-checks/1
+DELETE /api/process-checks/1
 ```
 
 Example test data:
@@ -239,6 +272,14 @@ status: OK / WARNING / CRITICAL
 lastCheckedAt: 2026-07-10T00:25:00
 slaMinutes: 60
 ```
+
+---
+
+## Logging
+
+Create, update and delete operations write one parameterized application log entry containing the record ID and, where useful, its status.
+
+Read requests and complete request bodies are not logged. This keeps the example useful for troubleshooting without producing noisy logs or copying input data unnecessarily.
 
 ---
 
@@ -314,12 +355,14 @@ This repository demonstrates a small but realistic backend foundation:
 - Spring Boot application structure
 - REST endpoint and HTTP-status design
 - JSON request and response handling
-- CRUD operations and status filtering
+- paginated list queries and status filtering
 - layered backend organization
-- request validation
+- request validation aligned with persistence constraints
 - standard Problem Detail error responses
 - explicit transaction boundaries
+- JPA dirty checking for managed updates
 - persistence abstraction with Spring Data JPA
+- restrained parameterized logging
 - local development and testing with H2
 - automated integration testing
 - reproducible Maven builds
@@ -332,7 +375,7 @@ This repository demonstrates a small but realistic backend foundation:
 
 This is a learning project.
 
-It does not include production database configuration, Docker deployment, authentication and authorization, a frontend UI, cloud deployment, monitoring infrastructure, pagination or enterprise-scale operational error handling.
+It does not include production database configuration, Docker deployment, authentication and authorization, a frontend UI, cloud deployment, metrics, tracing or enterprise-scale operational error handling.
 
 These omissions are intentional. The current scope is limited to a clean, understandable and tested Spring Boot REST API baseline.
 

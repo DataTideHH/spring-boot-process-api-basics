@@ -30,6 +30,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class ProcessCheckApiIntegrationTests {
 
     private static final long MISSING_ID = 999_999L;
+    private static final int MAX_TEXT_LENGTH = 120;
 
     @Autowired
     private MockMvc mockMvc;
@@ -69,11 +70,33 @@ class ProcessCheckApiIntegrationTests {
     void findAllWithoutStatusReturnsRecordsOfAllStatuses() throws Exception {
         mockMvc.perform(get("/api/process-checks"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(2)))
+                .andExpect(jsonPath("$.content", hasSize(2)))
                 .andExpect(jsonPath(
-                        "$[*].status",
+                        "$.content[*].status",
                         containsInAnyOrder("OK", "WARNING")
-                ));
+                ))
+                .andExpect(jsonPath("$.page.number", is(0)))
+                .andExpect(jsonPath("$.page.size", is(20)))
+                .andExpect(jsonPath("$.page.totalElements", is(2)))
+                .andExpect(jsonPath("$.page.totalPages", is(1)));
+    }
+
+    @Test
+    void findAllUsesRequestedPageSizeAndSortOrder() throws Exception {
+        mockMvc.perform(get("/api/process-checks")
+                        .param("page", "0")
+                        .param("size", "1")
+                        .param("sort", "processName,asc"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content", hasSize(1)))
+                .andExpect(jsonPath(
+                        "$.content[0].processName",
+                        is("Daily sales import")
+                ))
+                .andExpect(jsonPath("$.page.number", is(0)))
+                .andExpect(jsonPath("$.page.size", is(1)))
+                .andExpect(jsonPath("$.page.totalElements", is(2)))
+                .andExpect(jsonPath("$.page.totalPages", is(2)));
     }
 
     @Test
@@ -81,24 +104,26 @@ class ProcessCheckApiIntegrationTests {
         mockMvc.perform(get("/api/process-checks")
                         .param("status", "OK"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(1)))
+                .andExpect(jsonPath("$.content", hasSize(1)))
                 .andExpect(jsonPath(
-                        "$[*].status",
+                        "$.content[*].status",
                         everyItem(is("OK"))
                 ))
                 .andExpect(jsonPath(
-                        "$[0].processName",
+                        "$.content[0].processName",
                         is("Daily sales import")
                 ));
     }
 
     @Test
-    void findAllWithCriticalStatusReturnsEmptyArrayWhenNoRecordsMatch()
+    void findAllWithCriticalStatusReturnsEmptyPageWhenNoRecordsMatch()
             throws Exception {
         mockMvc.perform(get("/api/process-checks")
                         .param("status", "CRITICAL"))
                 .andExpect(status().isOk())
-                .andExpect(jsonPath("$", hasSize(0)));
+                .andExpect(jsonPath("$.content", hasSize(0)))
+                .andExpect(jsonPath("$.page.totalElements", is(0)))
+                .andExpect(jsonPath("$.page.totalPages", is(0)));
     }
 
     @Test
@@ -193,6 +218,40 @@ class ProcessCheckApiIntegrationTests {
                                 "OK",
                                 "2026-07-11T08:30:00",
                                 0
+                        )))
+                .andExpect(status().isBadRequest());
+
+        org.assertj.core.api.Assertions.assertThat(repository.findAll())
+                .hasSize(2);
+    }
+
+    @Test
+    void createWithOversizedProcessNameReturnsBadRequest() throws Exception {
+        mockMvc.perform(post("/api/process-checks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson(
+                                "x".repeat(MAX_TEXT_LENGTH + 1),
+                                "Data Quality",
+                                "OK",
+                                "2026-07-11T08:30:00",
+                                30
+                        )))
+                .andExpect(status().isBadRequest());
+
+        org.assertj.core.api.Assertions.assertThat(repository.findAll())
+                .hasSize(2);
+    }
+
+    @Test
+    void createWithOversizedOwnerReturnsBadRequest() throws Exception {
+        mockMvc.perform(post("/api/process-checks")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(requestJson(
+                                "Customer data quality check",
+                                "x".repeat(MAX_TEXT_LENGTH + 1),
+                                "OK",
+                                "2026-07-11T08:30:00",
+                                30
                         )))
                 .andExpect(status().isBadRequest());
 
