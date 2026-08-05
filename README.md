@@ -3,7 +3,7 @@
 [![CI](https://github.com/DataTideHH/spring-boot-process-api-basics/actions/workflows/ci.yml/badge.svg)](https://github.com/DataTideHH/spring-boot-process-api-basics/actions/workflows/ci.yml)
 [![GitHub Pages](https://github.com/DataTideHH/spring-boot-process-api-basics/actions/workflows/pages/pages-build-deployment/badge.svg)](https://github.com/DataTideHH/spring-boot-process-api-basics/actions/workflows/pages/pages-build-deployment)
 
-**Java 21 · Spring Boot 4.1 · REST API · Spring Data JPA · H2 · Validation · Maven · GitHub Actions**
+**Java 21 · Spring Boot 4.1 · REST API · Spring Data JPA · H2 · PostgreSQL · Docker Compose · Validation · Maven · GitHub Actions**
 
 Small Java 21 / Spring Boot learning project that exposes validated process-check data through a layered REST API.
 
@@ -27,6 +27,7 @@ It demonstrates:
 - basic persistence with Spring Data JPA
 - restrained parameterized logging for write operations
 - an H2 in-memory database for local development and tests
+- a Docker Compose service for local PostgreSQL
 - automated API integration tests with MockMvc
 - a reproducible Maven Wrapper workflow
 - GitHub Actions CI on Java 21
@@ -55,7 +56,8 @@ It complements my main Data/BI portfolio projects around SQL, Python, Power BI, 
 | API layer | Spring Web MVC | HTTP endpoints and JSON responses |
 | Pagination | Spring Data `Pageable` and `PagedModel` | Bounded list responses with stable page metadata |
 | Persistence | Spring Data JPA | Repository abstraction and entity persistence |
-| Database | H2 | In-memory local development and test database |
+| Active database | H2 | In-memory local development and test database |
+| Local database service | PostgreSQL 18 via Docker Compose | Prepared local database service for the next persistence step |
 | Validation | Jakarta Validation | Validation for incoming request data |
 | Error format | Spring `ProblemDetail` | Consistent `application/problem+json` responses |
 | Logging | SLF4J | Structured create, update and delete messages |
@@ -167,15 +169,15 @@ Requests for unknown IDs return a standard Spring `ProblemDetail` response with 
 
 ## Run Locally
 
-### macOS or Linux
+### Start the application with H2
 
-From the repository root:
+macOS or Linux:
 
 ```bash
 ./mvnw spring-boot:run
 ```
 
-### Windows PowerShell
+Windows PowerShell:
 
 ```powershell
 .\mvnw.cmd spring-boot:run
@@ -187,19 +189,24 @@ Then open:
 http://localhost:8080/api/process-checks
 ```
 
-At first startup, the H2 database is empty, so the list endpoint returns an empty page:
+At first startup, the H2 database is empty, so the list endpoint returns an empty page.
 
-```json
-{
-  "content": [],
-  "page": {
-    "size": 20,
-    "totalElements": 0,
-    "totalPages": 0,
-    "number": 0
-  }
-}
+### Start the PostgreSQL service
+
+The repository includes a root-level `compose.yaml` for a local PostgreSQL 18 service:
+
+```bash
+docker compose up -d
+docker compose ps
 ```
+
+Stop the service without deleting its named data volume:
+
+```bash
+docker compose down
+```
+
+The Spring Boot application is not connected to PostgreSQL yet. H2 remains the active application and test database until separate Spring profiles and PostgreSQL configuration are added.
 
 ---
 
@@ -283,30 +290,26 @@ Read requests and complete request bodies are not logged. This keeps the example
 
 ---
 
-## H2 Database Note
+## Database Notes
 
-This project uses an **H2 in-memory database** for local development and API testing.
+The application currently uses an **H2 in-memory database** for local development and API testing.
 
 That means:
 
-- no external database server is required
+- no external database server is required to run the application
 - the database is recreated when the application starts
 - inserted records are lost when the application stops
-- this is suitable for a small learning project, not for production persistence
+- the H2 console is available at `http://localhost:8080/h2-console`
 
-The H2 console is available while the application is running:
-
-```text
-http://localhost:8080/h2-console
-```
-
-Connection values:
+The included Docker Compose configuration starts PostgreSQL separately with:
 
 ```text
-JDBC URL: jdbc:h2:mem:processdb
-User: sa
-Password: <empty>
+Database: processdb
+User: processapp
+Port: 5432
 ```
+
+PostgreSQL data is stored in the named Docker volume `spring-boot-process-api-basics_processdb-data`. The application will be connected to this service in a later step using dedicated Spring profiles.
 
 ---
 
@@ -364,6 +367,7 @@ This repository demonstrates a small but realistic backend foundation:
 - persistence abstraction with Spring Data JPA
 - restrained parameterized logging
 - local development and testing with H2
+- local PostgreSQL provisioning with Docker Compose
 - automated integration testing
 - reproducible Maven builds
 - GitHub Actions CI
@@ -375,9 +379,9 @@ This repository demonstrates a small but realistic backend foundation:
 
 This is a learning project.
 
-It does not include production database configuration, Docker deployment, authentication and authorization, a frontend UI, cloud deployment, metrics, tracing or enterprise-scale operational error handling.
+It does not yet include Spring profiles for PostgreSQL, database migrations, authentication and authorization, a frontend UI, cloud deployment, metrics, tracing or enterprise-scale operational error handling.
 
-These omissions are intentional. The current scope is limited to a clean, understandable and tested Spring Boot REST API baseline.
+The Docker Compose service prepares a local PostgreSQL environment, but the application continues to use H2 until the persistence configuration is introduced separately.
 
 ---
 
