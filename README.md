@@ -25,7 +25,7 @@ It demonstrates:
 - status-based filtering and pagination
 - explicit HTTP success and error behavior
 - basic persistence with Spring Data JPA
-- restrained structured logging for write operations
+- restrained parameterized logging for write operations
 - an H2 in-memory database for local development and tests
 - automated API integration tests with MockMvc
 - a reproducible Maven Wrapper workflow
@@ -277,7 +277,7 @@ slaMinutes: 60
 
 ## Logging
 
-Create, update and delete operations write one structured application log entry containing the record ID and, where useful, its status.
+Create, update and delete operations write one parameterized application log entry containing the record ID and, where useful, its status.
 
 Read requests and complete request bodies are not logged. This keeps the example useful for troubleshooting without producing noisy logs or copying input data unnecessarily.
 
@@ -355,14 +355,14 @@ This repository demonstrates a small but realistic backend foundation:
 - Spring Boot application structure
 - REST endpoint and HTTP-status design
 - JSON request and response handling
-- paged CRUD queries and status filtering
+- paginated list queries and status filtering
 - layered backend organization
 - request validation aligned with persistence constraints
 - standard Problem Detail error responses
 - explicit transaction boundaries
 - JPA dirty checking for managed updates
 - persistence abstraction with Spring Data JPA
-- restrained structured logging
+- restrained parameterized logging
 - local development and testing with H2
 - automated integration testing
 - reproducible Maven builds

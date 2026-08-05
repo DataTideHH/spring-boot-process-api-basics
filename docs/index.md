@@ -44,7 +44,7 @@ It follows the [IPv4 Subnet Calculator Multilang](https://datatidehh.github.io/i
 - stable page metadata through Spring Data `PagedModel`
 - standard `ProblemDetail` error responses
 - explicit transaction boundaries and JPA dirty checking
-- restrained structured logging for write operations
+- restrained parameterized logging for write operations
 - integration tests with Spring Boot Test and MockMvc
 - reproducible Maven Wrapper builds
 - GitHub Actions verification on Java 21
