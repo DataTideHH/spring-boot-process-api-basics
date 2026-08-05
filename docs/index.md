@@ -5,7 +5,7 @@ description: Small Java 21 / Spring Boot REST API portfolio project
 
 # Spring Boot Process API Basics
 
-**Small Java 21 / Spring Boot REST API project exposing validated and paginated process-check data through a layered backend structure, automated tests and H2 persistence.**
+**Small Java 21 / Spring Boot REST API project exposing validated and paginated process-check data through a layered backend structure, automated tests, H2 persistence and a prepared local PostgreSQL service.**
 
 [View repository](https://github.com/DataTideHH/spring-boot-process-api-basics) · [Read the full README](https://github.com/DataTideHH/spring-boot-process-api-basics/blob/main/README.md) · [View CI](https://github.com/DataTideHH/spring-boot-process-api-basics/actions/workflows/ci.yml) · [DataTideHH portfolio](https://datatidehh.de/)
 
@@ -38,7 +38,8 @@ It follows the [IPv4 Subnet Calculator Multilang](https://datatidehh.github.io/i
 - Spring Data JPA repository usage
 - request and response records
 - Jakarta Validation aligned with entity constraints
-- H2 in-memory persistence
+- H2 in-memory persistence for the running application and tests
+- a local PostgreSQL 18 service provisioned with Docker Compose
 - CRUD endpoints for process-check data
 - status filtering and pagination
 - stable page metadata through Spring Data `PagedModel`
@@ -97,14 +98,16 @@ Invalid input returns `400 Bad Request`. Unknown record IDs return `404 Not Foun
 
 ## Local usage
 
-### macOS or Linux
+### Run the application with H2
+
+macOS or Linux:
 
 ```bash
 ./mvnw spring-boot:run
 ./mvnw clean verify
 ```
 
-### Windows PowerShell
+Windows PowerShell:
 
 ```powershell
 .\mvnw.cmd spring-boot:run
@@ -116,6 +119,27 @@ The API is available at:
 ```text
 http://localhost:8080/api/process-checks
 ```
+
+The H2 database starts empty and is reset when the application stops.
+
+### Start the local PostgreSQL service
+
+The repository includes a root-level `compose.yaml`:
+
+```bash
+docker compose up -d
+docker compose ps
+```
+
+Stop the service without deleting its named data volume:
+
+```bash
+docker compose down
+```
+
+The service exposes PostgreSQL 18 on port `5432` with database `processdb` and user `processapp`.
+
+The Spring Boot application is not connected to PostgreSQL yet. H2 remains the active application and test database until dedicated Spring profiles and PostgreSQL configuration are added.
 
 ---
 
@@ -149,8 +173,10 @@ The matching primary documentation is curated in [Open Learning Resources](https
 
 ## Data and limitations
 
-The project uses an H2 in-memory database. Data is reset when the application stops.
+The running application currently uses an H2 in-memory database. Data is reset when the application stops.
 
-The sample data is synthetic and does not contain personal, customer or production data.
+Synthetic fixtures are created inside the integration tests. The application does not load sample records during normal startup.
 
-This is a learning project with a deliberately limited scope. It does not claim production deployment, authentication, cloud operation, monitoring infrastructure or enterprise-scale operation.
+Docker Compose prepares a persistent local PostgreSQL service, but the application does not use it yet.
+
+This is a learning project with a deliberately limited scope. It does not yet include Spring profiles for PostgreSQL, database migrations, authentication, cloud operation, monitoring infrastructure or enterprise-scale operation.
