@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:18-alpine
+    environment:
+      POSTGRES_DB: processdb
+      POSTGRES_USER: processapp
+      POSTGRES_PASSWORD: processapp
+    ports:
+      - "5432:5432"
+    volumes:
+      - processdb-data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U processapp -d processdb"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+volumes:
+  processdb-data:
