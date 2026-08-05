@@ -5,7 +5,7 @@ description: Small Java 21 / Spring Boot REST API portfolio project
 
 # Spring Boot Process API Basics
 
-**Small Java 21 / Spring Boot REST API project exposing validated process-check data through a layered backend structure, automated tests and H2 persistence.**
+**Small Java 21 / Spring Boot REST API project exposing validated and paginated process-check data through a layered backend structure, automated tests and H2 persistence.**
 
 [View repository](https://github.com/DataTideHH/spring-boot-process-api-basics) · [Read the full README](https://github.com/DataTideHH/spring-boot-process-api-basics/blob/main/README.md) · [View CI](https://github.com/DataTideHH/spring-boot-process-api-basics/actions/workflows/ci.yml) · [DataTideHH portfolio](https://datatidehh.de/)
 
@@ -17,7 +17,7 @@ This project is a deliberately compact backend learning project.
 
 It demonstrates how process-related records can be represented, validated, persisted and exposed through a small REST API using Spring Boot.
 
-The goal is not to present a production service or an enterprise backend system. The goal is to document a clean first step from Java basics toward a small layered REST API with explicit HTTP behavior, persistence and automated verification.
+The goal is not to present a production service or an enterprise backend system. The goal is to document a clean first step from Java basics toward a small layered REST API with explicit HTTP behavior, bounded list queries, persistence and automated verification.
 
 ---
 
@@ -37,11 +37,14 @@ It follows the [IPv4 Subnet Calculator Multilang](https://datatidehh.github.io/i
 - controller, service and repository separation
 - Spring Data JPA repository usage
 - request and response records
-- Jakarta Validation
+- Jakarta Validation aligned with entity constraints
 - H2 in-memory persistence
 - CRUD endpoints for process-check data
-- optional status filtering
+- status filtering and pagination
+- stable page metadata through Spring Data `PagedModel`
 - standard `ProblemDetail` error responses
+- explicit transaction boundaries and JPA dirty checking
+- restrained structured logging for write operations
 - integration tests with Spring Boot Test and MockMvc
 - reproducible Maven Wrapper builds
 - GitHub Actions verification on Java 21
@@ -52,29 +55,43 @@ It follows the [IPv4 Subnet Calculator Multilang](https://datatidehh.github.io/i
 
 | Method | Endpoint | Result | Purpose |
 |---|---|---:|---|
-| `GET` | `/api/process-checks` | `200` | List all records |
-| `GET` | `/api/process-checks?status=OK` | `200` | Filter by `OK`, `WARNING` or `CRITICAL` |
+| `GET` | `/api/process-checks?page=0&size=20` | `200` | List one page of records |
+| `GET` | `/api/process-checks?status=OK&page=0&size=20` | `200` | Filter and page by status |
 | `GET` | `/api/process-checks/{id}` | `200` | Read one record |
 | `POST` | `/api/process-checks` | `201` | Create a record and return `Location` |
 | `PUT` | `/api/process-checks/{id}` | `200` | Update a record |
 | `DELETE` | `/api/process-checks/{id}` | `204` | Delete a record |
 
+The list endpoint defaults to 20 records, sorts by `lastCheckedAt` descending and caps requested page sizes at 100.
+
 Invalid input returns `400 Bad Request`. Unknown record IDs return `404 Not Found` as `application/problem+json`.
 
 ---
 
-## Example process-check record
+## Example paged response
 
 ```json
 {
-  "id": 1,
-  "processName": "Daily sales import",
-  "owner": "Data Operations",
-  "status": "OK",
-  "lastCheckedAt": "2026-07-10T00:25:00",
-  "slaMinutes": 60
+  "content": [
+    {
+      "id": 1,
+      "processName": "Daily sales import",
+      "owner": "Data Operations",
+      "status": "OK",
+      "lastCheckedAt": "2026-07-10T00:25:00",
+      "slaMinutes": 60
+    }
+  ],
+  "page": {
+    "size": 20,
+    "totalElements": 1,
+    "totalPages": 1,
+    "number": 0
+  }
 }
 ```
+
+`processName` and `owner` are required and limited to 120 characters. The JPA entity mirrors these length and nullability rules.
 
 ---
 
@@ -104,7 +121,7 @@ http://localhost:8080/api/process-checks
 
 ## Verification
 
-The integration suite covers list and filter behavior, lookup by ID, creation, validation failures, updates, deletion, persistence effects and `404` Problem Detail responses.
+The integration suite covers pagination, sorting, status filtering, lookup by ID, creation, blank and oversized input, updates, deletion, persistence effects and `404` Problem Detail responses.
 
 The GitHub Actions workflow runs `clean verify` with Eclipse Temurin Java 21 for pull requests and pushes to `main`.
 
@@ -136,4 +153,4 @@ The project uses an H2 in-memory database. Data is reset when the application st
 
 The sample data is synthetic and does not contain personal, customer or production data.
 
-This is a learning project with a deliberately limited scope. It does not claim production deployment, authentication, cloud operation or enterprise-scale infrastructure.
+This is a learning project with a deliberately limited scope. It does not claim production deployment, authentication, cloud operation, monitoring infrastructure or enterprise-scale operation.
